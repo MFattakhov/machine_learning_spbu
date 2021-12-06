@@ -6,8 +6,8 @@ TEST_PATH = './tests/'
     with open(TEST_PATH + i) as f:'''
 file = TEST_PATH + '1.txt'
 with open(file, 'w') as f:
-    f.write('a' * 10**4 + 'b' * 5 + '\n')
-    f.write('b' * 5 + 'c' * 10**4)
+    f.write('a' * 10**3 + 'b' * 5 + '\n')
+    f.write('b' * 5 + 'c' * 10**3)
 
 file = TEST_PATH + '2.txt'
 with open(file, 'w') as f:

@@ -3,9 +3,12 @@ import math
 from datetime import datetime
 import matplotlib.pyplot as plt
 
+# функция генерации координат городов
 def generate_nodes(size):
     return [(random.uniform(0, size), random.uniform(0, size)) for i in range(size)]
 
+# функция мутации - выбираем 2 случайных узла на пути
+# и меняем местами все, что между ними.
 def mutate(path):
     i = random.randrange(len(path))
     j = random.randrange(len(path))
@@ -18,18 +21,19 @@ def run_annealing(initial_path, trials, initial_temp, cooling_rate):
     history = [distance(initial_path)]
     path = initial_path[:]
     temperature = initial_temp
-    for trial in range(trials):
+    for trial in range(trials): # для каждой итерации
         new_path = mutate(path)
-        delta = (distance(new_path) - distance(path)) / distance(path)
+        delta = (distance(new_path) - distance(path)) / distance(path) # высчитываем разницу пройденного расстояния для пути с мутацией и без
         try:
-            if math.exp((delta*(-1))/temperature) > random.random():
+            if math.exp((delta*(-1))/temperature) > random.random(): # если значение оценки больше случайного числа, то принимаем за текущий новый путь
                 path = new_path
         except:
             pass
-        temperature *= cooling_rate
+        temperature *= cooling_rate # уменьшаем температуру
         history.append(distance(path))
     return history, path
 
+# функция для подсчета пройденного расстояния между городами
 def distance(path):
     dist = 0
     for i in range(len(path) - 1):
@@ -38,10 +42,11 @@ def distance(path):
     return dist
 
 if __name__ == "__main__":
-    initial_temp = 0.05
-    size = 100
-    cooling_constant = 0.99997
-    number_of_iteration = 100000
+
+    initial_temp = 0.05 # начальная температура
+    size = 100 # количество городов
+    cooling_constant = 0.99997 # мера уменьшения температуры на каждой итерации
+    number_of_iteration = 100000 # количество итераций для поиска минимума
 
     start = datetime.now()
 

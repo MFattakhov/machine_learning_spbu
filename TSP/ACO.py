@@ -14,12 +14,24 @@ def lengthCal(antPath, distmat):         # Рассчитать расстоян
         dis = 0
     return length
 
+def readFile():                 # Прочитать граф из файла. Граф задан координатами
+    print('enter the path to the file')
+    path = input()
+    points = []
+    with open(path) as f:
+        size = int(f.readline())
+        distmat = np.array([[0 for _ in range(size)] for _ in range(size)])
+        for j in range(size):
+            x, y = map(int, input().split())
+            points.append([x, y])
+            for i in range(len(points) - 1):
+                distmat[i][j] = ((points[i][0] - points[j][0]) ** 2 + (points[i][1] - points[j][1]) ** 2) ** 0.5
+                distmat[j][i] = ((points[i][0] - points[j][0]) ** 2 + (points[i][1] - points[j][1]) ** 2) ** 0.5
+    return points, distmat, size
 
-print('Print graph size')
-size = int(input())
-
-
-def createPoints(size):
+def createPoints():                    # Сгенерировать случайные координаты графа
+    print('Print graph size')
+    size = int(input())
     points = []
     distmat = np.array([[0 for _ in range(size)] for _ in range(size)])
     for j in range(size):
@@ -27,10 +39,18 @@ def createPoints(size):
         for i in range(len(points) - 1):
             distmat[i][j] = ((points[i][0] - points[j][0]) ** 2 + (points[i][1] - points[j][1]) ** 2) ** 0.5
             distmat[j][i] = ((points[i][0] - points[j][0]) ** 2 + (points[i][1] - points[j][1]) ** 2) ** 0.5
-    return points, distmat
+    return points, distmat, size
 
 
-points, distmat = createPoints(size)
+
+useFile = False # Счыитвание из файла
+
+if useFile:
+    points, distmat, size = readFile()
+else:
+    points, distmat, size = createPoints()
+
+
 print(points)
 for i in distmat:
     print(*i)
@@ -48,41 +68,43 @@ startAll = datetime.now()
 
 for iter in range(itermax):
     startIter = datetime.now()
-    antPath = np.zeros((antNum, cityNum)).astype(int) - 1   # Путь муравья
+    antPath = np.zeros((antNum, cityNum)).astype(int) - 1   # Путь каждого муравья
     firstCity = [i for i in range(antNum)]
-    rd.shuffle(firstCity)                                   # Случайный город для каждого муравья
+    rd.shuffle(firstCity)                                   # Перемешивания списка городов
+                                                            # которые станут точками старта муравьев
 
-    for i in range(len(antPath)):
+    for i in range(len(antPath)):                           # Начальный город для каждого муравья
         antPath[i][0] = firstCity[i]
 
-    for i in range(cityNum - 1):                             # Обновление пути муравья
+    for i in range(cityNum - 1):                            # Обновление пути муравья
         for j in range(antNum):
-            unvisted = []
-            p = []
-            pAccum = 0
+            unvisted = []                                   # Города, в которых никого не было
+            p = []                                          # Вероятности отправиться в город, связанный с тем,
+                                                            # в котором находится данный муравей
+            pAccum = 0                                      # знаменатель в формуле верятности перехода в город
 
-            for k in range(cityNum):
+            for k in range(cityNum):                        # Считывание городов, в которые можно прийти
                 if k not in antPath[j]:
                     unvisted.append(k)
 
-            for m in unvisted:
+            for m in unvisted:                              # Расчет знаменателя
                 pAccum += pheromone[antPath[j][i]][m] ** alpha * heuristic[antPath[j][i]][m] ** beta
 
-            for n in unvisted:
+            for n in unvisted:                              # Заполнение списка вероятностей
                 p.append(pheromone[antPath[j][i]][n] ** alpha * heuristic[antPath[j][i]][n] ** beta / pAccum)
 
             roulette = np.array(p).cumsum()
             #print(p, roulette)
             r = rd.uniform(min(roulette), max(roulette))
             for x in range(len(roulette)):
-                if roulette[x] >= r:                      # Выбрать следующий город
+                if roulette[x] >= r:                      # Случайный вобор следеющего города в зависимости от его вероятности
                     antPath[j][i + 1] = unvisted[x]
                     break
-    pheromone = (1 - pheEvaRate) * pheromone            # Феромон летучий
+    pheromone = (1 - pheEvaRate) * pheromone            # Испарение феромона везде
     length = lengthCal(antPath, distmat)
     for i in range(len(antPath)):
         for j in range(len(antPath[i]) - 1):
-            pheromone[antPath[i][j]][antPath[i][j + 1]] += 1 / length[i]     # Обновление феромона
+            pheromone[antPath[i][j]][antPath[i][j + 1]] += 1 / length[i]     # Добаление феромона там, где прошли
         pheromone[antPath[i][-1]][antPath[i][0]] += 1 / length[i]
     endIter = datetime.now()
     print(iter, 'iter time', endIter - startIter)

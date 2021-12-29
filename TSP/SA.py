@@ -4,8 +4,14 @@ from datetime import datetime
 import matplotlib.pyplot as plt
 
 # функция генерации координат городов
-def generate_nodes(size):
-    return [(random.uniform(0, size), random.uniform(0, size)) for i in range(size)]
+def read_nodes(path):
+    rez = []
+    with open(path, 'r', encoding='UTF-8') as f:
+        n = int(f.readline())
+        for _ in range(n):
+            line = f.readline().split()
+            rez.append((int(line[0]), int(line[1])))
+    return rez
 
 # функция мутации - выбираем 2 случайных узла на пути
 # и меняем местами все, что между ними.
@@ -41,24 +47,21 @@ def distance(path):
     dist += math.sqrt(math.pow(path[0][0] - path[-1][0], 2) + math.pow(path[0][1] - path[-1][1], 2))
     return dist
 
-if __name__ == "__main__":
-
-    initial_temp = 0.05 # начальная температура
-    size = 100 # количество городов
-    cooling_constant = 0.99997 # мера уменьшения температуры на каждой итерации
-    number_of_iteration = 100000 # количество итераций для поиска минимума
-
+def SA(file, initial_temp=0.05, cooling_constant=99997, number_of_iteration=100000):
     start = datetime.now()
 
-    path = generate_nodes(size)
+    path = read_nodes(file)
     history, path = run_annealing(path, number_of_iteration, initial_temp, cooling_constant)
 
     end = datetime.now()
+
+    return [(end - start).total_seconds(), distance(path)]
 
     path.append(path[0])
     x = [path[i][0] for i in range(len(path))]
     y = [path[i][1] for i in range(len(path))]
 
+    '''
     plt.figure(1, figsize=(7, 15))
     plt.subplot(211)
     plt.title('Learning curve\n'
@@ -73,4 +76,9 @@ if __name__ == "__main__":
     plt.subplot(212)
     plt.title('Optimal path', pad=2, fontsize=10, fontweight='bold')
     plt.plot(x, y, markersize=12)
-    plt.show()
+    plt.savefig('SA.png', format='png', dpi=300)
+    '''
+    # plt.show()
+
+if __name__ == "__main__":
+    print(SA('test5.txt', number_of_iteration=10000))

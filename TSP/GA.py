@@ -1,6 +1,7 @@
 import random
 import numpy as np
 import matplotlib.pyplot as plt
+from datetime import datetime
 
 
 # Вычисление евклидового расстояния
@@ -23,9 +24,9 @@ def init_population(cityList, populationSize):
 def fit(path):
     distanceSum = 0
     for i in range(len(path) - 1):
-        distanceSum += distance(path[i], path[i+1])
+        distanceSum += distance(path[i], path[i + 1])
     distanceSum += distance(path[-1], path[0])
-    return 1/distanceSum
+    return 1 / distanceSum
 
 
 # Ранжирование популяции по весам
@@ -44,7 +45,7 @@ def roulette_wheel_selection(populationRank):
     randomNum = random.uniform(0.0001, probabilitySum)
 
     i = 0
-    while randomNum > 0:
+    while randomNum > 0 and i < len(populationRank):
         randomNum -= populationRank[i][1]
         i += 1
     else:
@@ -78,7 +79,7 @@ def mutate(population, mutationRate, numOfCity):
             randomNum = random.random()
             if randomNum < mutationRate:
                 # Будем менять два города в перестановке местами
-                a = random.randint(0, numOfCity-1)
+                a = random.randint(0, len(population[i]) - 1)
                 population[i][a], population[i][j] = population[i][j], population[i][a]
     return population
 
@@ -91,7 +92,21 @@ def next_population(population, numOfCity, mutationRate):
     return nextGeneration
 
 
-def GA(cityList, populationSize, mutationRate, generation, numOfCity):
+def GA(path, population_size=10, rate=0.01, generations=4000):
+    cityList = [] # Список городов
+    startAll = datetime.now()
+    # Считывание координат городов из файла
+    with open(path, 'r', encoding='UTF-8') as f:
+        n = int(f.readline())
+        for _ in range(n):
+            line = f.readline().split()
+            cityList.append((int(line[0]), int(line[1])))
+
+    numOfCity = len(cityList) # Количество городов
+    populationSize = population_size # Размер популяции
+    mutationRate = rate # Вероятность мутации
+    generation = generations # Количество поколений
+    
     population = init_population(cityList, populationSize)
     process = []
 
@@ -100,7 +115,10 @@ def GA(cityList, populationSize, mutationRate, generation, numOfCity):
         rankPopulation = rank(Population)
         process.append([1 / rankPopulation[-1][1], Population[rankPopulation[-1][0]]])
 
+    endAll = datetime.now()
     way = min(process)[1]
+    return [(endAll - startAll).total_seconds(), 1/fit(way)]
+
     print('Наилучший маршрут:')
     for i in range(numOfCity):
         if i == numOfCity-1:
@@ -109,6 +127,7 @@ def GA(cityList, populationSize, mutationRate, generation, numOfCity):
             print(way[i], '-->', end='', sep='')
 
     # Построение графиков
+    '''
     plt.subplot(211)
     plt.plot([process[i][0] for i in range(len(process))], linewidth=0.45)
     plt.xlabel('Generation')
@@ -124,33 +143,14 @@ def GA(cityList, populationSize, mutationRate, generation, numOfCity):
     plt.plot([X[0], X[-1]], [Y[0], Y[-1]], c='b')
     plt.scatter(X, Y)
     plt.xlabel('Way')
-
-    plt.show()
-
-
-
-numOfCity = 10          # Количество городов
-cityList = []           # Список городов
-populationSize = 10     # Размер популяции
-mutationRate = 0.01     # Вероятность мутации
-generation = 4000       # Количество поколений
+    plt.savefig('GA.png', format='png', dpi=300)
+    plt.show()'''
 
 # Генерация координат городов
-for i in range(numOfCity):
+'''for i in range(numOfCity):
     cx = random.randint(0, 50)
     cy = random.randint(0, 50)
-    cityList.append((cx, cy))
+    cityList.append((cx, cy))'''
 
-'''
-# Считывание координат городов из файла
-with open('file.txt', 'r', encoding='UTF-8') as f:
-    lines = f.readlines()
-for line in lines:
-    line = line.replace('\n', '')
-    line = line.split(';')
-    cityList.append((int(line[0]), int(line[1])))
-
-numOfCity = len(cityList)
-'''
-
-GA(cityList, populationSize, mutationRate, generation, numOfCity)
+if __name__ == "__main__":
+    print(GA('test1.txt', generations=600))
